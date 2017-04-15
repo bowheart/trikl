@@ -22,6 +22,7 @@
   "author": "Joshua Claunch",
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^3.19.0",
     "jest": "^19.0.2"
   },
   "jest": {
