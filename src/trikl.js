@@ -31,7 +31,7 @@ function skip(num) {
 }
 
 function skipDrop(num = 1) {
-	num = Math.max(parseInt(num, 10), 1) // can't skip less than 1 item
+	num = Math.max(parseInt(num), 1) // can't skip less than 1 item
 	return skip.bind(this, num)
 }
 
