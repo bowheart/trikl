@@ -1,3 +1,8 @@
+[![build status](https://travis-ci.org/bowheart/trikl.svg?branch=master)](https://travis-ci.org/bowheart/trikl)
+[![Test Coverage](https://codeclimate.com/github/bowheart/trikl/badges/coverage.svg)](https://codeclimate.com/github/bowheart/trikl/coverage)
+[![Issue Count](https://img.shields.io/codeclimate/issues/github/bowheart/trikl.svg)](https://codeclimate.com/github/bowheart/trikl/issues)
+[![Code Climate](https://codeclimate.com/github/bowheart/trikl/badges/gpa.svg)](https://codeclimate.com/github/bowheart/trikl)
+
 # Trikl
 
 Creating callback heaven. Trikl provides a simplified promise chain syntax, allowing you to callback and callforth with reckless abandon.
