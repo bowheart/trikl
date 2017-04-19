@@ -4,7 +4,8 @@
   "description": "The antidote for \"callback hell\"",
   "main": "src/trikl.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+	"lint": "eslint src/"
   },
   "repository": {
     "type": "git",

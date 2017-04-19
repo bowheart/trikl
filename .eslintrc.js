@@ -28,7 +28,7 @@ module.exports = {
         "callback-return": "error",
         "camelcase": "error",
         "capitalized-comments": [
-            "error",
+            "off",
             "never"
         ],
         "class-methods-use-this": "error",
@@ -135,7 +135,7 @@ module.exports = {
         "no-magic-numbers": "off",
         "no-mixed-operators": "error",
         "no-mixed-requires": "error",
-        "no-multi-assign": "error",
+        "no-multi-assign": "off",
         "no-multi-spaces": "error",
         "no-multi-str": "error",
         "no-multiple-empty-lines": "error",
@@ -217,7 +217,7 @@ module.exports = {
         "prefer-rest-params": "off",
         "prefer-spread": "error",
         "prefer-template": "off",
-        "quote-props": "error",
+        "quote-props": "off",
         "quotes": [
             "error",
             "single"

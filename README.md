@@ -57,7 +57,7 @@ Not too bad. Let's dig into this one:
 
 - `drip(args)` &ndash; anything you pass to `drip()` will be passed along as arguments to the next drop in the chain. Calling `drip()` in the last drop in the chain resolves the underlying promise.
 
-> *Wait, what promise?* &ndash; Every trickle creates a promise chain internally. The last promise in the chain can be accessed via `trickle.promise`. The first promise in the chain can be resolved and rejected with `trickle.resolve()` and `trickle.reject()` respectively.
+> *Wait, what promise?* &ndash; Every trickle creates a promise chain internally. The first promise in the chain can be accessed via `trickle.promise` and resolved and rejected with `trickle.resolve()` and `trickle.reject()` respectively.
 
 - `trickle.then()` &ndash; calls `then()` on the underlying promise, but returns the trickle for chaining. The usage is therefore exactly the same as [Promise.prototype.then()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then).
 

@@ -4,34 +4,36 @@ module.exports = createFactory({})
 
 const slice = Array.prototype.slice
 
+
+// Factory creation and implementation functions:
+
+function triklTemplate(drop) {
+	let trikl = new Trikl(this)
+	if (drop) trikl.drop(...arguments)
+	return trikl
+}
+
 function createFactory(context) {
-	/*
-		trikl() -- a factory for creating new instances of Trikl. Accepts an optional first drop to start the trickle.
-	*/
-	let trikl = function(drop) {
-		let trikl = new Trikl(this)
-		if (drop) trikl.drop(...arguments)
-		return trikl
-	}.bind(context)
+	let trikl = triklTemplate.bind(context)
 	
-	Object.defineProperty(trikl, 'pure', {
-		get: function() {
-			let newContext = Object.assign({}, context)
-			newContext.pure = true
-			return createFactory(newContext)
-		}
-	})
-	
-	Object.defineProperty(trikl, 'halt', {
-		get: function() {
-			let newContext = Object.assign({}, context)
-			newContext.halt = true
-			return createFactory(newContext)
-		}
-	})
+	setFlagGetter(trikl, context, 'pure')
+	setFlagGetter(trikl, context, 'halt')
 	
 	return trikl
 }
+
+function setFlagGetter(trikl, context, flagName) {
+	Object.defineProperty(trikl, flagName, {
+		get() {
+			let newContext = Object.assign({}, context) // shallowly clone the old context
+			newContext[flagName] = true
+			return createFactory(newContext)
+		}
+	})
+}
+
+
+// Trikl methods and definition:
 
 function drip() {
 	let nextDrop = this.drops.shift()
