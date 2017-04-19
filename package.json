@@ -1,7 +1,7 @@
 {
   "name": "trikl",
   "version": "0.1.0",
-  "description": "The antidote for 'callback hell'",
+  "description": "The antidote for \"callback hell\"",
   "main": "src/trikl.js",
   "scripts": {
     "test": "jest"
