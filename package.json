@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "trikl"
+    "url": "https://github.com/bowheart/trikl"
   },
   "keywords": [
     "promise",
@@ -22,6 +22,10 @@
   ],
   "author": "Joshua Claunch",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bowheart/trikl/issues"
+  },
+  "homepage": "https://github.com/bowheart/trikl#readme",
   "devDependencies": {
     "eslint": "^3.19.0",
     "jest": "^19.0.2"

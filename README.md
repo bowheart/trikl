@@ -145,6 +145,8 @@ trikl()
     .reject() // hits the 'onRejected' handler
 ```
 
+> Note: `trickle.resolve()` and `trickle.reject()` do not stop the trickle! If there are more drops, they'll keep on dripping. For this reason, you'll typically use `trickle.drip.stop()` instead of calling these directly.
+
 ##### `trickle.drop()`
 
 Add drops modularly to a trickle. Signature is the same as the `trikl()` factory itself; zero or more drops may be specified.
@@ -224,7 +226,7 @@ let trickle = trikl(drip => drip(1))
     })
     .drop(drip => {
         let [originalVal, newVal] = trickle.dropArgs
-        drip(val + 1)
+        drip(newVal + 1)
     })
 ```
 
@@ -322,6 +324,7 @@ compile(theCode)
     .then(compiledCode => {})
     .catch(error => {})
 ```
+
 **Example Three** &ndash; A much more in-depth example with various methods of error handling. This example reads some JSON from a file, parses it asynchronously, makes a modification, stringifies it asynchronously, and saves it:
 
 ```javascript
@@ -334,7 +337,7 @@ function modifyJsonFile(file) {
     return trikl(drip => {
         
         // An example of callback control (note: the next drop handles errors):
-        fs.readFile(file, drip, 'utf-8')
+        fs.readFile(file, 'utf8', drip)
         
     }).drop((drip, err, contents) => {
         // Yes, we can throw stuff! Trikl will catch it and reject the underlying promise for us.
@@ -361,6 +364,17 @@ function modifyJsonFile(file) {
 ```
 
 > Note: If you want to reject the underlying promise with something that isn't an instance of Error, calling `drip.stop()` won't work. You have to throw it or call `trickle.reject()` manually.
+
+**Example Four** &ndash; A `trikl()` factory with multiple flags.
+
+```javascript
+let trickle = trikl.halt.pure(val => trickle.drip(val + 'b'))
+    .drop(val => trickle.drip(val + 'c'))
+    .drip('a') // start the halted trickle
+    .then(result => {
+        console.log(result) // <- logs "abc"
+    })
+```
 
 ## Advantages
 
@@ -393,7 +407,7 @@ let trickle = trikl(drip => {
 }).drop((drip, result) => {
     setTimeout(drip.bind(null, result + 1))
 }).drop((drip, result) => {
-    console.log(result)
+    console.log(result) // <- logs "2"
     drip(result)
 })
 ```
@@ -459,6 +473,39 @@ let buildProcess = trikl.halt(findFiles, convertJsx, uglify, bundle, compileSass
 
 // somewhere later:
 buildProcess.drip()
+```
+
+**Smarter workflow**
+
+I doubt I'm the only one who's had to do this many times:
+
+```javascript
+let resolve, reject
+let promise = new Promise((_resolve, _reject) => {
+    // I don't want to resolve or reject anything in here!
+    // Maybe because I don't know whether to resolve or reject yet.
+    // Maybe because I don't want to nest more async calls inside this already-nested callback.
+    resolve = _resolve
+    reject = _reject
+})
+
+promise.then(...)
+    .then(...)
+    .catch(...)
+
+resolve('I am resolving you down here! Not inside the lame promise resolver function.')
+```
+
+Trikl does this for you. The `resolve()` and `reject()` functions come packaged with every trickle.
+
+```javascript
+let trickle = trikl()
+
+trickle.then(...)
+    .then(...)
+    .catch(...)
+
+trickle.resolve('Whoa, my life just got easy.')
 ```
 
 ## Bugs, Pull Requests, Feedback, Comments, Requests, Whatever
