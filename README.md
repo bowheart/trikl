@@ -67,6 +67,8 @@ And that does it for the basics. You can now use Trikl like a pro (basically)! B
 
 ## API
 
+Unless otherwise noted, all methods return their trickle for chaining.
+
 #### `trikl()`
 
 The default factory for creating trickles. Accepts zero or more drops as arguments.
@@ -113,7 +115,7 @@ trickle.lastPromise = trickle.lastPromise.then(() => {})
 
 ##### `trickle.catch()`
 
-Attach onRejected handlers to the last promise in the underlying promise chain. Adds a new promise to the underlying promise chain and points the `trickle.lastPromise` property it. Returns the trickle for chaining.
+Attach onRejected handlers to the last promise in the underlying promise chain. Adds a new promise to the underlying promise chain and points the `trickle.lastPromise` property to it. Returns the trickle for chaining.
 
 ```javascript
 trickle.catch(() => {})
@@ -142,7 +144,7 @@ Reject the underlying promise (the first one in the underlying promise chain). T
 trikl()
     .then(result => console.log('fulfilled'))
     .catch(result => console.log('rejected'))
-    .reject() // hits the 'onRejected' handler
+    .reject() // logs "rejected"
 ```
 
 > Note: `trickle.resolve()` and `trickle.reject()` do not stop the trickle! If there are more drops, they'll keep on dripping. For this reason, you'll typically use `trickle.drip.stop()` instead of calling these directly.
@@ -184,7 +186,7 @@ let trickle = trikl()
 
 ##### `trickle.drip.skip()`
 
-Skip one or more drops. Returns a modified version of `trickle.drip()` that, when called (if called), removes the specified number of drops from the remaining drops in the chain. If this results in the last drop being removed, or there are no drops to remove, then this is equivalent to calling `trickle.drip.stop()`.
+Skip one or more drops. Returns a modified version of `trickle.drip()` that, when called (if called), removes the specified number of drops from the remaining drops in the chain. If this results in the last drop being removed, or there are no drops to remove, then this is equivalent to calling `trickle.drip.stop()`. One drop will be skipped if this is called with no arguments, a number less than 1, or anything that `isNaN`.
 
 ```javascript
 trikl(drip => drip())
@@ -222,7 +224,7 @@ A reference to the list of arguments passed to the last-called drop. Can be used
 let trickle = trikl(drip => drip(1))
     .drop(drip => {
         let [val] = trickle.dropArgs
-        drip(val + 1, val)
+        drip(val, val + 1)
     })
     .drop(drip => {
         let [originalVal, newVal] = trickle.dropArgs
@@ -286,6 +288,35 @@ getBuildProcess().drip(APP_DIR)
 ```
 
 Note that with this flag, arguments can be passed to the first drop. Can also be used to force a trickle to begin dripping immediately. This shaves off some time, since trickles normally wait until the end of the current turn of the event loop (via calling `setTimeout`) to start dripping. This flag is required to make synchronous trickles.
+
+##### `trikl.hard`
+
+Creates a factory for creating hard trickles. A hard trickle will pass a modified version of `trickle.drip()` to its drops. This modified version can be called only once. Useful for enforcing a strict drop-by-drop flow. Note that this flag will have no effect if used with the `pure` flag, as `trickle.drip()` won't be passed to drops anyway.
+
+```javascript
+let trickle = trikl.hard(drip => drip())
+    .drop(drip => {
+        drip(1)
+        drip(2) // will have no effect
+    })
+    .drop(drip => {
+        setTimeout(drip.bond(3))
+    })
+    .then(result => {
+        console.log(result) // logs "3"
+    })
+```
+
+Note that we could have still bypassed hard mode in that first drop by doing either of the following:
+
+```javascript
+// 1) we can still access the un-modified `drip()` method on the trickle itself:
+drip(1)
+trickle.drip(2)
+
+// 2) `drip()` returns the trickle for chaining, so this one is really just an alias of the first:
+drip(1).drip(2)
+```
 
 ## Examples
 
@@ -457,6 +488,7 @@ Note that since the last drop in the trickle resolves the underlying promise, it
 With promise chains, you must assume the code will run asynchronously and basically immediately. Using the `trikl.halt` flag, you have perfect control over when and how your trickle executes. You can run it synchronously:
 
 ```javascript
+// Yeah, don't do this at home. These impure functions will give you nightmares:
 let val = 0
 trikl.halt(() => val++)
     .drop(() => val++)

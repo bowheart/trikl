@@ -124,6 +124,16 @@ describe('trikl()', () => {
 			})
 	})
 	
+	test('attempting to skip a drop with something that isNaN results in one drop being skipped', () => {
+		return trikl(drip => drip.skip('non-int-string')(1))
+			.drop((drip, val) => drip(val + 1))
+			.drop((drip, val) => drip(val + 1))
+			.promise
+			.then(result => {
+				expect(result).toBe(2)
+			})
+	})
+	
 	test('a drop can drip through multiple drops', () => {
 		return trikl(drip => {
 				drip()
@@ -233,6 +243,16 @@ describe('trikl()', () => {
 			.drip()
 		
 		expect(val).toBe(2)
+	})
+	
+	test('the `hard` flag passes a wrapped version of `trickle.drip()` to each drop that can be called only once', () => {
+		return trikl.hard(drip => drip(1))
+			.drop(drip => drip(2) && drip(3))
+			.drop(drip => setTimeout(drip.bind(null, 4)))
+			.promise
+			.then(result => {
+				expect(result).toBe(4)
+			})
 	})
 	
 	test('the `halt` and `pure` flags can be used together in any order', () => {

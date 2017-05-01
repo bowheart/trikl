@@ -18,6 +18,7 @@ function createFactory(context) {
 	
 	setFlagGetter(trikl, context, 'pure')
 	setFlagGetter(trikl, context, 'halt')
+	setFlagGetter(trikl, context, 'hard')
 	
 	return trikl
 }
@@ -40,14 +41,31 @@ function drip() {
 	if (!nextDrop) return this.drip.stop(...arguments)
 	
 	this.dropArgs = [...arguments]
+	let drip = this.isHard
+		? hardDrip.bind(this, {called: false})
+		: this.drip
+	
 	try {
 		this.isPure
 			? nextDrop(...this.dropArgs)
-			: nextDrop(this.drip, ...this.dropArgs)
+			: nextDrop(drip, ...this.dropArgs)
 	} catch (ex) {
 		stopDripWithError.call(this, ex)
 	}
 	return this // for chaining
+}
+
+function hardDrip(info) {
+	if (info.called) return // this drip has already been called; cancel
+	
+	info.called = true
+	let args = slice.call(arguments, 1) // trim off the info object
+	return this.drip(...args)
+}
+
+function registerSkip(num = 1) {
+	num = Math.max(parseInt(num) || 1, 1) // can't skip less than 1 item
+	return skip.bind(this, num)
 }
 
 function skip(num) {
@@ -55,11 +73,6 @@ function skip(num) {
 	this.drops.splice(0, num)
 	this.drip(...args)
 	return this // for chaining
-}
-
-function skipDrop(num = 1) {
-	num = Math.max(parseInt(num), 1) // can't skip less than 1 item
-	return skip.bind(this, num)
 }
 
 function stopDrip(val) {
@@ -76,15 +89,16 @@ function stopDripWithError() {
 }
 
 class Trikl {
-	constructor({pure, halt}) {
+	constructor({pure, halt, hard}) {
 		this.isPure = pure
+		this.isHard = hard
 		this.promise = this.lastPromise = new Promise((resolve, reject) => {
 			this.resolve = this.resolve.bind(this, resolve)
 			this.reject = this.reject.bind(this, reject)
 		})
 		this.drops = []
 		this.drip = drip.bind(this)
-		this.drip.skip = skipDrop.bind(this)
+		this.drip.skip = registerSkip.bind(this)
 		this.drip.stop = stopDrip.bind(this)
 		
 		if (!halt) setTimeout(this.drip) // allow the drops to be added in this turn of the event loop
