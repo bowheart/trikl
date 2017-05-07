@@ -36,23 +36,38 @@ function setFlagGetter(trikl, context, flagName) {
 
 // Trikl methods and definition:
 
+function bindDrip(drip) {
+	drip.bond = bond.bind(drip)
+	drip.skip = registerSkip.bind(this)
+	drip.stop = stopDrip.bind(this)
+}
+
+function bond() {
+	return this.bind(this, ...arguments)
+}
+
 function drip() {
 	let nextDrop = this.drops.shift()
 	if (!nextDrop) return this.drip.stop(...arguments)
 	
 	this.dropArgs = [...arguments]
-	let drip = this.isHard
-		? hardDrip.bind(this, {called: false})
-		: this.drip
 	
 	try {
 		this.isPure
 			? nextDrop(...this.dropArgs)
-			: nextDrop(drip, ...this.dropArgs)
+			: nextDrop(getDrip.call(this), ...this.dropArgs)
 	} catch (ex) {
 		stopDripWithError.call(this, ex)
 	}
 	return this // for chaining
+}
+
+function getDrip() {
+	if (!this.isHard) return this.drip
+	
+	let newDrip = hardDrip.bind(this, {called: false})
+	bindDrip.call(this, newDrip)
+	return newDrip
 }
 
 function hardDrip(info) {
@@ -98,8 +113,7 @@ class Trikl {
 		})
 		this.drops = []
 		this.drip = drip.bind(this)
-		this.drip.skip = registerSkip.bind(this)
-		this.drip.stop = stopDrip.bind(this)
+		bindDrip.call(this, this.drip)
 		
 		if (!halt) setTimeout(this.drip) // allow the drops to be added in this turn of the event loop
 	}

@@ -93,6 +93,15 @@ describe('trikl()', () => {
 		})
 	})
 	
+	test('`drip.bond(...)` is an alias for `drip.bind(null, ...)`', () => {
+		return trikl(drip => setTimeout(drip.bond(2)))
+			.drop((drip, val) => drip(val + 1))
+			.promise
+			.then(result => {
+				expect(result).toBe(3)
+			})
+	})
+	
 	test('a drop can skip the next drop via `drip.skip()()`', () => {
 		return trikl(drip => drip.skip()(1))
 			.drop(drip => drip(2))

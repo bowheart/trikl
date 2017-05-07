@@ -59,9 +59,9 @@ Not too bad. Let's dig into this one:
 
 > *Wait, what promise?* &ndash; Every trickle creates a promise chain internally. The first promise in the chain can be accessed via `trickle.promise` and resolved and rejected with `trickle.resolve()` and `trickle.reject()` respectively.
 
-- `trickle.then()` &ndash; calls `then()` on the underlying promise, but returns the trickle for chaining. The usage is therefore exactly the same as [Promise.prototype.then()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then).
+- `trickle.then()` &ndash; calls `then()` on the last promise in the underlying promise chain, but returns the trickle for chaining. The signature is therefore exactly the same as [Promise.prototype.then()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then).
 
-Yep, you can add links to the underlying promise chain via `trickle.then()` and `trickle.catch()` respectively. Since Trikl exposes `then` and `catch` methods, most code that expects a promise can receive a trickle instead.
+Yep, you can add links to the underlying promise chain via `trickle.then()` and `trickle.catch()`. Since Trikl exposes `then` and `catch` methods, most code that expects a promise can receive a trickle instead.
 
 And that does it for the basics. You can now use Trikl like a pro (basically)! But that isn't everything. Read through the Method API and the more in-depth examples for real pro status.
 
@@ -101,11 +101,11 @@ Attach onFulfilled handlers to the last promise in the underlying promise chain.
 let trickle = trikl()
 
 // This adds a second promise to the underlying promise chain.
-    .then(result => result)
+    .then(result => {})
 
 // This adds a third promise to the underlying promise chain.
 // It will not be resolved until the second promise in the chain resolves it.
-    .then(result => result)
+    .then(result => {})
 
 // Note:
 trickle.then(() => {})
@@ -181,6 +181,18 @@ let trickle = trikl()
 // That last call to `trickle.drip()` resolved the underlying promise.
     .then(result => {
         console.log(result) // logs "onetwo"
+    })
+```
+
+##### `trickle.drip.bond()`
+
+An alias for `trickle.drip.bind(null)`. Since `trickle.drip()` is already bound, binding new contexts to it will have no effect. This shorthand just abstracts the context-binding purpose of [Function.prototype.bind()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind) and focuses on partial application.
+
+```javascript
+trikl(drip => setTimeout(drip.bond('a'))) // short for `drip.bind(null, 'a')`
+    .drop((drip, val) => setTimeout(drip.bond(val + 'b')))
+    .then(result => {
+        console.log(result) // logs "ab"
     })
 ```
 
@@ -327,7 +339,7 @@ trikl(drip => {
     setTimeout(drip)
 }).drop(drip => {
     let val = 'some-val'
-    setTimeout(drip.bind(null, val))
+    setTimeout(drip.bond(val))
 }).drop((drip, val) => {
     console.log(val) // <- logs "some-val"
 })
@@ -337,7 +349,7 @@ Mainly just two things to note here:
 
 - You'll usually pass the `drip` function reference directly to async functions (e.g. `setTimeout`, `fs.readFile`).
 
-- You can partially apply the `drip` function using `drip.bind(null, val1, val2...)`. Those bound values will be passed to the next drop normally.
+- You can partially apply the `drip` function using `drip.bond(val1, val2, ...)`. Those bound values will be passed to the next drop normally.
 
 **Example Two** &ndash; A convention: Return the underlying promise from functions that define trickles. This just ensures that code that might expect a real promise receives one.
 
@@ -436,7 +448,7 @@ This is equivalent to the following trickle:
 let trickle = trikl(drip => {
     drip(1)
 }).drop((drip, result) => {
-    setTimeout(drip.bind(null, result + 1))
+    setTimeout(drip.bond(result + 1))
 }).drop((drip, result) => {
     console.log(result) // <- logs "2"
     drip(result)
